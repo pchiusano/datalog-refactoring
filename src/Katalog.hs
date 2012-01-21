@@ -1,15 +1,10 @@
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
 module Katalog where
 -- a minimalist datalog for use by kata
 -- stolen from Ed Kmett
 import Backend
 
-import qualified Data.Text as T
-import Data.Text (Text)
-
 import qualified Data.List as L
-
-import qualified Data.Map as M
-import Data.Map (Map)
 
 import Control.Arrow ((&&&),(***))
 import Control.Applicative ((<$>))
@@ -17,13 +12,6 @@ import Control.Monad.State
 
 import Data.Monoid
 import Data.Graph
-import Data.Either (partitionEithers)
-
-import Text.Parsec.Combinator
-import Text.Parsec.Prim hiding (State)
-import Text.Parsec.Error
-import Text.Parsec.Char
-
 
 combine :: Datalog -> Datalog -> Datalog
 combine a b = g (mappend a b) where
@@ -125,4 +113,18 @@ ruleGraph rules = buildG bds edges where
 -- TODO:
 -- quickcheck properties, arbitrary instances
 -- runP <parser> = PP.render doc x
+--
 
+data DB = DB { fullyExtended :: Bool, db :: Datalog }   
+
+-- return all derived facts, but don't commit them
+derive :: State DB DB
+derive = do 
+  DB b db <- get
+  return $ if b then DB b db else DB True (combine db ((uncurry seminaive db, [])))
+
+instance Backend (State DB) where
+   facts = liftM (fst . db) derive 
+   rules = liftM (snd . db) derive 
+   memoAll = derive >>= put
+   declare db = modify (\(DB _ db0) -> DB False (combine db0 db)) 

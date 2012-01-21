@@ -95,13 +95,14 @@ class Monad f => Backend f where
   factsFor n = liftM (filter (\x -> atomName x == n)) facts 
 
   factsForId :: Int -> f [Fact]
-  factsFor n = liftM (filter (\x -> atomId x == n)) facts 
+  factsForId n = liftM (filter (\x -> atomId x == n)) facts 
 
   -- the list of all rules
   rules :: f [Rule]
 
   -- the list of all rules for a given table 
   rulesFor :: Name -> f [Rule]
+  rulesFor n = liftM (filter (\r -> atomName (ruleHead r) == n)) rules
 
   -- only memoize facts for the given table
   -- memo :: Name -> f ()
