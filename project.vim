@@ -1,4 +1,5 @@
 set autowrite
+set encoding=UTF-8
 set makeprg=cabal\ build
 "set efm=%E\ %#[error]\ %f:%l:\ %m,%C\ %#[error]\ %p^,%C\ %#[error]\ \ %m,%-C%.%#,%Z,
 "       \%W\ %#[warn]\ %f:%l:\ %m,%C\ %#[warn]\ %p^,%-C%.%#,%Z,
