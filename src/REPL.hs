@@ -13,14 +13,14 @@ import Backend
 import PrettyPrint
 import Parser
 
-type ReplS = (Datalog, Env)
+type ReplS = (DB, Env)
 
 commands :: [(String, StateT ReplS (InputT IO) ())]
 commands = [("facts", ac fst),
             ("rules", ac snd),
             ("edb", ac $ uncurry seminaive)]
 
-ac f = get >>= lift . outputStrLn . show . doc . f . fst
+ac f = get >>= lift . outputStrLn . show . doc . f . db . fst
 
 repl :: IO ()
 repl = runInputT defaultSettings $ evalStateT loop (mempty, initialEnv)
@@ -32,7 +32,7 @@ repl = runInputT defaultSettings $ evalStateT loop (mempty, initialEnv)
        Just ":q" -> return ()
        Just (':' : c) -> (maybe (unrecognized c) id $ lookup c commands) >> loop
        Just input -> do
-         modify (\(dl, ps) -> let (nd, ns) = runP input ps in (dl `combine` nd, ns))
+         modify (\(DB _ dl, ps) -> let (nd, ns) = runP input ps in (DB False (dl `combine` nd), ns))
          loop
    unrecognized c = lift $ outputStrLn ("Unrecognized command " ++ c)
    runP s u = 

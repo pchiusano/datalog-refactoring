@@ -117,6 +117,10 @@ ruleGraph rules = buildG bds edges where
 
 data DB = DB { fullyExtended :: Bool, db :: Datalog }   
 
+instance Monoid DB where
+  mempty = DB True mempty
+  mappend a b = DB False (db a `mappend` db b)
+
 -- return all derived facts, but don't commit them
 derive :: State DB DB
 derive = do 
