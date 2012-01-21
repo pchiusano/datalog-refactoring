@@ -4,19 +4,23 @@ module REPL where
 import System.Console.Haskeline
 import Katalog
 import Control.Monad.Trans
-import Control.Monad.State
+import Control.Monad.State hiding (State)
+import Data.Text as T
+import Text.Parsec.Prim
 import Data.Monoid
 import Control.Applicative
 
-commands :: [(String, StateT Datalog (InputT IO) ())]
+type ReplS = (Datalog, Env)
+
+commands :: [(String, StateT ReplS (InputT IO) ())]
 commands = [("facts", ac fst),
             ("rules", ac snd),
             ("edb", ac $ uncurry naive)]
 
-ac f = get >>= lift . outputStrLn . show . doc . f
+ac f = get >>= lift . outputStrLn . show . doc . f . fst
 
 repl :: IO ()
-repl = runInputT defaultSettings $ evalStateT loop ([],[])
+repl = runInputT defaultSettings $ evalStateT loop (mempty, initialEnv)
  where
    loop = do
      minput <- lift $ getInputLine "% "
@@ -25,7 +29,9 @@ repl = runInputT defaultSettings $ evalStateT loop ([],[])
        Just ":q" -> return ()
        Just (':' : c) -> (maybe (unrecognized c) id $ lookup c commands) >> loop
        Just input -> do
-         modify . either (error . show) (flip mappend) $ run input
+         modify (\(dl, ps) -> let (nd, ns) = runP input ps in (dl `mappend` nd, ns))
          loop
    unrecognized c = lift $ outputStrLn ("Unrecognized command " ++ c)
-
+   runP s u = 
+     either (error . show) id $
+       runParser (statements >>= \x -> ((,) x) <$> getState) u "-" $ T.pack s
