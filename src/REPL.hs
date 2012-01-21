@@ -6,12 +6,10 @@ import Katalog
 import Control.Monad.Trans
 import Control.Monad.State hiding (State)
 import Data.Text as T
-import Text.Parsec.Prim
+import Text.Parsec.Prim (runParser, getState)
 import Data.Monoid
 import Control.Applicative
 import Backend
-import PrettyPrint
-import Parser
 
 type ReplS = (DB, Env)
 
