@@ -11,7 +11,7 @@ import Control.Applicative
 commands :: [(String, StateT Datalog (InputT IO) ())]
 commands = [("facts", ac fst),
             ("rules", ac snd),
-            ("edb", ac $ uncurry naive)]
+            ("edb", ac $ uncurry seminaive)]
 
 ac f = get >>= lift . outputStrLn . show . doc . f
 
@@ -25,7 +25,7 @@ repl = runInputT defaultSettings $ evalStateT loop ([],[])
        Just ":q" -> return ()
        Just (':' : c) -> (maybe (unrecognized c) id $ lookup c commands) >> loop
        Just input -> do
-         modify . either (error . show) (flip mappend) $ run input
+         either (error . show) (\db2 -> modify (flip combine db2)) $ run input
          loop
    unrecognized c = lift $ outputStrLn ("Unrecognized command " ++ c)
 
