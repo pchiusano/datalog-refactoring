@@ -8,17 +8,13 @@ import Text.PrettyPrint (($$),(<>),(<+>))
 import qualified Data.Text as T
 import Data.Text (Text)
 
-import qualified Data.ByteString as B
-import Data.ByteString (ByteString(..))
-
 import qualified Data.List as L
-import Data.Maybe (isNothing,isJust)
 
 import qualified Data.Map as M
 import Data.Map (Map)
 
 import Control.Arrow ((&&&),(***))
-import Control.Applicative ((<$>),(<*>))
+import Control.Applicative ((<$>))
 import Control.Monad.State
 
 import Data.Monoid
@@ -77,6 +73,7 @@ ruleBody :: Rule -> [Pat]
 ruleBody (Rule _ x) = x
 
 type Fact = Atom Con
+type Datalog = ([Fact], [Rule])
 
 data Env = Env 
     { envConMap :: Map String Con
@@ -190,9 +187,9 @@ safe rule@(Rule head body) = do
 
         posVars, negVars :: Pat -> [Var]
         posVars (Pat atom) = [ v | Var v <- atomArgs atom ]
-        posVars (Not atom) = []
+        posVars (Not _) = []
         negVars (Not atom) = [ v | Var v <- atomArgs atom ]
-        negVars (Pat atom) = []
+        negVars (Pat _) = []
 
 statement :: P (Either Fact Rule)
 statement = try (Left <$> fact)

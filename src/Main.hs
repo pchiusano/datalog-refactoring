@@ -17,10 +17,13 @@
  -   $ ap(Id, X) :- names(
  -
  -}
+
 module Main where
 
+import REPL
+
 main :: IO ()
-main = do
-  putStr "hello world!"
+main = repl 
+
 
 
