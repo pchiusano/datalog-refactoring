@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses #-}
 module Katalog where
 -- a minimalist datalog for use by kata
+-- stolen from Ed Kmett
 
 import qualified Text.PrettyPrint as PP
 import Text.PrettyPrint (($$),(<>),(<+>))
@@ -56,6 +57,10 @@ atomPred :: Atom t -> Con
 atomPred (Atom x _) = x
 atomArgs :: Atom t -> [t]
 atomArgs (Atom _ t) = t
+atomName :: Atom t -> String
+atomName (Atom (C _ s) _) = s
+atomId :: Atom t -> Int
+atomId (Atom (C id _) _) = id
 
 data Pat = Not (Atom Term) | Pat (Atom Term) deriving (Show,Eq,Ord)
 patAtom :: Pat -> Atom Term
@@ -245,6 +250,10 @@ instance Pretty [Fact] where
 
 instance Pretty ([Fact],[Rule]) where
     doc (x,y) = doc x $$ doc y
+
+-- instance Pretty Subst
+instance Pretty [(Var,Con)] where
+    doc vs = PP.vcat $ map (\(v,n) -> doc v <+> PP.text "=" <+> doc n) vs  
 
 type Subst = [(Var,Con)]
 

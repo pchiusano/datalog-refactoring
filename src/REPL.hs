@@ -9,6 +9,7 @@ import Data.Text as T
 import Text.Parsec.Prim
 import Data.Monoid
 import Control.Applicative
+import Backend
 
 type ReplS = (Datalog, Env)
 
