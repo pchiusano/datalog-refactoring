@@ -12,6 +12,7 @@ import qualified Data.List as L
 
 import qualified Data.Map as M
 import Data.Map (Map)
+import Data.List
 
 import Control.Arrow ((&&&),(***))
 import Control.Applicative ((<$>))
@@ -74,6 +75,9 @@ ruleBody (Rule _ x) = x
 
 type Fact = Atom Con
 type Datalog = ([Fact], [Rule])
+
+combine :: Datalog -> Datalog -> Datalog
+combine a b = (nub . fst &&& nub . snd) (mappend a b)
 
 data Env = Env 
     { envConMap :: Map String Con
