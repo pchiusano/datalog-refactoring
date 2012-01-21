@@ -1,13 +1,88 @@
-
 module Backend where
-
-import Katalog (Fact, Rule, Atom, Term, Datalog, Subst, atomName, atomId, unifyAtom)
 
 import Control.Monad
 import Data.Maybe
 import Data.List
 
+import qualified Data.List as L
+
+import qualified Data.Map as M
+import Data.Map (Map)
+import Data.List
+
+on :: (a -> a -> b) -> (c -> a) -> c -> c -> b
+on (*) f x y = f x * f y
+
 type Name = String
+
+type Id = Int
+
+newtype Var = V String deriving (Show,Eq,Ord)  -- x
+varName (V s) = s
+
+data Con = C Id String deriving (Show) -- Foo
+conName (C _ s) = s
+conId (C x _) = x
+
+instance Eq Con where
+    (==) = (==) `on` conId 
+    (/=) = (/=) `on` conId
+
+instance Ord Con where
+    compare = compare `on` conId
+
+data Term = Var Var | Con Con deriving (Show,Eq,Ord)
+
+data Atom t = Atom Con [t] deriving (Show,Eq,Ord) --{ atomPred :: Con, atomTerms :: [t] } deriving (Show,Eq)
+atomPred :: Atom t -> Con
+atomPred (Atom x _) = x
+atomArgs :: Atom t -> [t]
+atomArgs (Atom _ t) = t
+atomName :: Atom t -> String
+atomName (Atom (C _ s) _) = s
+atomId :: Atom t -> Int
+atomId (Atom (C id _) _) = id
+
+data Pat = Not (Atom Term) | Pat (Atom Term) deriving (Show,Eq,Ord)
+patAtom :: Pat -> Atom Term
+patAtom (Pat a) = a 
+patAtom (Not a) = a
+
+isNot :: Pat -> Bool
+isNot (Not _) = True
+isNot _ = False
+
+data Rule = Rule (Atom Term) [Pat] deriving (Show,Eq,Ord)
+ruleHead :: Rule -> Atom Term
+ruleHead (Rule x _) = x
+
+ruleBody :: Rule -> [Pat] 
+ruleBody (Rule _ x) = x
+
+eitherTerm :: (Var -> a) -> (Con -> a) -> Term -> a
+eitherTerm f _ (Var x) = f x
+eitherTerm _ g (Con y) = g y
+
+type Fact = Atom Con
+type Datalog = ([Fact], [Rule])
+type Subst = [(Var,Con)]
+
+unifyAtom :: (Functor m, Monad m) => Subst -> Atom Term -> Fact -> m Subst
+unifyAtom s (Atom b ps) (Atom h cs) 
+    | h == b    = unifyList s ps cs
+    | otherwise = fail "predicate mismatch"
+
+unifyCon :: (Functor m, Monad m) => Subst -> Con -> Con -> m Subst
+unifyCon s c c' | c == c' = return s
+                | otherwise = fail "constructor mismatch"
+
+unifyList :: (Functor m, Monad m) => Subst -> [Term] -> [Con] -> m Subst
+unifyList s (Con p:ps) (c:cs) = unifyCon s p c
+unifyList s (Var v:ps) (c:cs) = case L.lookup v s of
+    Just c' -> unifyCon s c c'
+    Nothing -> return $ (v,c):s
+unifyList s [] [] = return s
+unifyList s _ _ = fail "arity mismatch"
 
 -- f could be State Datalog
 class Monad f => Backend f where
@@ -43,5 +118,4 @@ class Monad f => Backend f where
 
   -- add new facts and rules to knowledge base
   declare :: Datalog -> f () 
-
 

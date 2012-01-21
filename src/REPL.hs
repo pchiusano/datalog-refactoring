@@ -10,6 +10,8 @@ import Text.Parsec.Prim
 import Data.Monoid
 import Control.Applicative
 import Backend
+import PrettyPrint
+import Parser
 
 type ReplS = (Datalog, Env)
 
