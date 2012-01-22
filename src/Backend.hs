@@ -34,6 +34,11 @@ instance Ord Con where
 data Term = Var Var | Con Con deriving (Show,Eq,Ord)
 
 data Atom t = Atom Con [t] deriving (Show,Eq,Ord) --{ atomPred :: Con, atomTerms :: [t] } deriving (Show,Eq)
+
+type Fact = Atom Con
+type Datalog = ([Fact], [Rule])
+type Subst = [(Var,Con)]
+
 atomPred :: Atom t -> Con
 atomPred (Atom x _) = x
 atomArgs :: Atom t -> [t]
@@ -63,9 +68,6 @@ eitherTerm :: (Var -> a) -> (Con -> a) -> Term -> a
 eitherTerm f _ (Var x) = f x
 eitherTerm _ g (Con y) = g y
 
-type Fact = Atom Con
-type Datalog = ([Fact], [Rule])
-type Subst = [(Var,Con)]
 
 unifyAtom :: (Functor m, Monad m) => Subst -> Atom Term -> Fact -> m Subst
 unifyAtom s (Atom b ps) (Atom h cs) 
