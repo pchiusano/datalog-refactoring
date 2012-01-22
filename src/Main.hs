@@ -21,9 +21,13 @@
 module Main where
 
 import REPL
+import Data.Monoid
+import Katalog
 
 main :: IO ()
-main = repl 
+main = do 
+  io <- stateLowerIO (DB True mempty)
+  repl io 
 
 
 
